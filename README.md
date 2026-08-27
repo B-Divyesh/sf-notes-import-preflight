@@ -26,9 +26,9 @@ notes-preflight compare ./my-export.zip ./destination-export
 notes-preflight compare ./before.json ./destination-export --json --fail-on-loss
 ```
 
-`--fail-on-loss` exits with code 2 when notes or attachments appear to be missing, which makes it useful in scripts. Invalid input or an unsafe archive exits with code 1. `--max-entry-mb` and `--max-total-mb` lower or raise bounded ZIP scan limits; archives are streamed and never extracted.
+`--fail-on-loss` exits with code 2 when a note is missing or changed, or an attachment is missing, which makes it useful in scripts. Duplicate note titles and filenames are never collapsed: note and attachment fingerprints are matched as occurrence-aware sets, and duplicate losses include the source-relative path. Invalid input or an unsafe archive exits with code 1. `--max-entry-mb` and `--max-total-mb` lower or raise bounded ZIP scan limits; archives are streamed and never extracted.
 
-The JSON schema is versioned with `schema_version`. Reports contain aggregate diagnostics, normalized names, sizes, and content fingerprints; note bodies and attachment bytes are never written to the report.
+The JSON schema is versioned with `schema_version`. Schema 2 adds source-relative paths for collision-safe diagnostics; schema 1 reports remain readable. Reports contain aggregate diagnostics, normalized names, sizes, paths, and content fingerprints; note bodies and attachment bytes are never written to the report.
 
 ## What it checks
 

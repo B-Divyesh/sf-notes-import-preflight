@@ -34,10 +34,10 @@ destinationInput.addEventListener("change", async () => {
   try {
     const destination = await inspectFiles([...(destinationInput.files || [])]);
     const comparison = compareBrowserReports(currentReport, destination);
-    const total = comparison.missingNotes.length + comparison.missingAttachments.length;
+    const total = comparison.missingNotes.length + comparison.changedNotes.length + comparison.missingAttachments.length;
     target.innerHTML = total === 0
-      ? `<p class="pass"><b>Pass.</b> All ${currentReport.totals.notes} note names and ${currentReport.totals.attachments} attachment name/size pairs are present.</p>`
-      : `<p class="loss"><b>Loss detected.</b> ${comparison.missingNotes.length} notes and ${comparison.missingAttachments.length} attachments need review.</p><ul>${[...comparison.missingNotes, ...comparison.missingAttachments].slice(0, 8).map(escapeItem).join("")}</ul>`;
+      ? `<p class="pass"><b>Pass.</b> All ${currentReport.totals.notes} note and ${currentReport.totals.attachments} attachment fingerprints are present.</p>`
+      : `<p class="loss"><b>Loss detected.</b> ${comparison.missingNotes.length} missing notes, ${comparison.changedNotes.length} changed notes, and ${comparison.missingAttachments.length} missing attachments need review.</p><ul>${[...comparison.missingNotes, ...comparison.changedNotes, ...comparison.missingAttachments].slice(0, 8).map(escapeItem).join("")}</ul>`;
   } catch { target.innerHTML = "<p class=\"loss\">The destination folder could not be inspected.</p>"; }
 });
 

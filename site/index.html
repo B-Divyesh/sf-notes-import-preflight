@@ -7,7 +7,7 @@
     <meta name="description" content="Inspect a notes export locally before migration and catch missing attachments afterward.">
     <title>Notes Import Preflight — know what will survive</title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-    <link rel="preload" href="/assets/preflight-market.webp" imagesrcset="/assets/preflight-market-640.webp 640w, /assets/preflight-market-960.webp 960w, /assets/preflight-market.webp 1280w" imagesizes="(max-width: 620px) 120vw, (max-width: 900px) 80vw, 65vw" as="image" type="image/webp" fetchpriority="high">
+    <link rel="preload" href="/assets/preflight-market.b48100d9.webp" imagesrcset="/assets/preflight-market-640.74bccda9.webp 640w, /assets/preflight-market-960.2992c541.webp 960w, /assets/preflight-market.b48100d9.webp 1280w" imagesizes="(max-width: 620px) 120vw, (max-width: 900px) 80vw, 65vw" as="image" type="image/webp" fetchpriority="high">
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to main content</a>
@@ -34,7 +34,7 @@
           <p class="privacy-note">No account. No upload. No telemetry.</p>
         </div>
         <figure class="hero-art">
-          <img src="/assets/preflight-market.webp" srcset="/assets/preflight-market-640.webp 640w, /assets/preflight-market-960.webp 960w, /assets/preflight-market.webp 1280w" sizes="(max-width: 620px) 120vw, (max-width: 900px) 80vw, 65vw" width="1280" height="853" alt="A midnight archive stall where boxes of notes pass through a mint-lit inspection gate toward a detailed paper manifest." fetchpriority="high">
+          <img src="/assets/preflight-market.b48100d9.webp" srcset="/assets/preflight-market-640.74bccda9.webp 640w, /assets/preflight-market-960.2992c541.webp 960w, /assets/preflight-market.b48100d9.webp 1280w" sizes="(max-width: 620px) 120vw, (max-width: 900px) 80vw, 65vw" width="1280" height="853" alt="A midnight archive stall where boxes of notes pass through a mint-lit inspection gate toward a detailed paper manifest." fetchpriority="high">
           <figcaption>Inspect the cargo, then sign the manifest.</figcaption>
         </figure>
       </section>
@@ -47,7 +47,7 @@
         <div class="section-heading">
           <p class="eyebrow">Browser counter / free</p>
           <h2 id="inspect-title">Run a private spot check</h2>
-          <p>Select an unzipped export folder. This quick inventory runs entirely in this tab. Use the CLI for ZIP/ENEX parsing, content fingerprints, and the authoritative comparison.</p>
+          <p>Select an unzipped export folder. This quick inventory runs entirely in this tab. Use the CLI for ZIP/ENEX parsing and a saved, scriptable manifest.</p>
         </div>
         <div class="inspection-bench">
           <div class="drop-ticket">
@@ -94,7 +94,7 @@
         <ol class="steps">
           <li><span>01</span><h3>Scan the source</h3><p>Save the baseline before any importer touches the archive.</p><code>notes-preflight scan export.zip --json &gt; before.json</code></li>
           <li><span>02</span><h3>Make the move</h3><p>Import into the new app, then export the destination once.</p><code>Use a copy. Keep the original.</code></li>
-          <li><span>03</span><h3>Compare the cargo</h3><p>Find missing notes and attachment bytes by title and fingerprint.</p><code>notes-preflight compare before.json after/ --fail-on-loss</code></li>
+          <li><span>03</span><h3>Compare the cargo</h3><p>Find missing or changed notes and attachment bytes with duplicate-safe fingerprints.</p><code>notes-preflight compare before.json after/ --fail-on-loss</code></li>
         </ol>
       </section>
 

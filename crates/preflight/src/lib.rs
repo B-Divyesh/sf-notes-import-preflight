@@ -9,7 +9,9 @@ use std::path::{Component, Path};
 use walkdir::WalkDir;
 use zip::ZipArchive;
 
-pub const SCHEMA_VERSION: u8 = 1;
+/// Schema 2 adds source-relative paths. They make collision diagnostics useful
+/// without exposing note bodies or attachment bytes.
+pub const SCHEMA_VERSION: u8 = 2;
 const MAX_SAMPLE_COUNT: usize = 8;
 
 #[derive(Debug, Clone, Copy)]
@@ -41,6 +43,8 @@ pub struct Totals {
 pub struct NoteEntry {
     pub key: String,
     pub title: String,
+    #[serde(default)]
+    pub path: String,
     pub format: String,
     pub bytes: u64,
     pub fingerprint: String,
@@ -53,6 +57,8 @@ pub struct NoteEntry {
 pub struct AttachmentEntry {
     pub key: String,
     pub name: String,
+    #[serde(default)]
+    pub path: String,
     pub media_type: String,
     pub bytes: u64,
     pub fingerprint: String,
@@ -197,7 +203,7 @@ pub fn read_report(path: &Path) -> Result<ScanReport, String> {
     let file = File::open(path).map_err(|e| format!("cannot open report: {e}"))?;
     let report: ScanReport = serde_json::from_reader(io::BufReader::new(file))
         .map_err(|e| format!("not a Notes Import Preflight report: {e}"))?;
-    if report.schema_version != SCHEMA_VERSION {
+    if !(1..=SCHEMA_VERSION).contains(&report.schema_version) {
         return Err(format!(
             "unsupported report schema {}",
             report.schema_version
@@ -380,6 +386,7 @@ fn build_report(
             notes.push(NoteEntry {
                 key: normalize_key(&title),
                 title,
+                path: file.path.clone(),
                 format: ext,
                 bytes: file.bytes.len() as u64,
                 fingerprint: digest(&file.bytes),
@@ -422,6 +429,7 @@ fn build_report(
                     .next()
                     .unwrap_or(&file.path)
                     .to_string(),
+                path: file.path.clone(),
                 media_type,
                 bytes: file.bytes.len() as u64,
                 fingerprint: digest(&file.bytes),
@@ -495,6 +503,7 @@ fn parse_enex(
         notes.push(NoteEntry {
             key,
             title: title.clone(),
+            path: format!("{}#note-{}", file.path, index + 1),
             format: "enex".to_string(),
             bytes: block.len() as u64,
             fingerprint: digest(content.as_bytes()),
@@ -523,6 +532,12 @@ fn parse_enex(
             attachments.push(AttachmentEntry {
                 key: normalize_key(&name),
                 name,
+                path: format!(
+                    "{}#note-{}/resource-{}",
+                    file.path,
+                    index + 1,
+                    resource_index + 1
+                ),
                 media_type: media,
                 bytes: decoded.len() as u64,
                 fingerprint: digest(&decoded),
@@ -783,59 +798,93 @@ fn media_type_for(ext: &str) -> String {
     .to_string()
 }
 
-/// Compare source and destination inventories by stable titles and attachment content hashes.
+/// Compare inventories without collapsing duplicate titles or filenames.
+///
+/// Exact fingerprints are matched first (as a multiset), then same-title notes
+/// are paired as changed. That order means a destination export cannot make one
+/// duplicate source note stand in for another. Attachments are intentionally
+/// matched only by their SHA-256 fingerprint and occurrence count: a filename
+/// and byte count are descriptive metadata, not proof that the bytes survived.
 pub fn compare(source: &ScanReport, destination: &ScanReport) -> CompareReport {
-    let dest_note_keys: BTreeMap<&str, &NoteEntry> = destination
-        .notes
-        .iter()
-        .map(|n| (n.key.as_str(), n))
-        .collect();
-    let source_note_keys: HashSet<&str> = source.notes.iter().map(|n| n.key.as_str()).collect();
+    let mut unmatched_destination_notes = vec![true; destination.notes.len()];
+    let mut unmatched_source_notes = Vec::new();
+
+    // A note whose body survives exactly is accounted for even if an export
+    // changes its notebook path or title formatting.
+    for (source_index, note) in source.notes.iter().enumerate() {
+        if let Some(destination_index) =
+            destination
+                .notes
+                .iter()
+                .enumerate()
+                .find_map(|(index, candidate)| {
+                    (unmatched_destination_notes[index]
+                        && candidate.fingerprint == note.fingerprint)
+                        .then_some(index)
+                })
+        {
+            unmatched_destination_notes[destination_index] = false;
+        } else {
+            unmatched_source_notes.push(source_index);
+        }
+    }
+
+    let duplicate_note_keys = duplicate_keys(source.notes.iter().map(|note| note.key.as_str()));
     let mut missing_notes = Vec::new();
     let mut changed_notes = Vec::new();
-    for note in &source.notes {
-        match dest_note_keys.get(note.key.as_str()) {
-            None => missing_notes.push(note.title.clone()),
-            Some(dest) if dest.fingerprint != note.fingerprint => {
-                changed_notes.push(note.title.clone())
-            }
-            _ => {}
+    for source_index in unmatched_source_notes {
+        let note = &source.notes[source_index];
+        if let Some(destination_index) =
+            destination
+                .notes
+                .iter()
+                .enumerate()
+                .find_map(|(index, candidate)| {
+                    (unmatched_destination_notes[index] && candidate.key == note.key)
+                        .then_some(index)
+                })
+        {
+            unmatched_destination_notes[destination_index] = false;
+            changed_notes.push(entry_label(
+                &note.title,
+                &note.path,
+                duplicate_note_keys.contains(note.key.as_str()),
+            ));
+        } else {
+            missing_notes.push(entry_label(
+                &note.title,
+                &note.path,
+                duplicate_note_keys.contains(note.key.as_str()),
+            ));
         }
     }
-    let dest_hashes: HashSet<&str> = destination
-        .attachments
-        .iter()
-        .map(|a| a.fingerprint.as_str())
-        .collect();
-    let dest_name_sizes: HashSet<(&str, u64)> = destination
-        .attachments
-        .iter()
-        .map(|a| (a.key.as_str(), a.bytes))
-        .collect();
+
+    let duplicate_attachment_keys = duplicate_keys(
+        source
+            .attachments
+            .iter()
+            .map(|attachment| attachment.key.as_str()),
+    );
+    let mut destination_attachment_fingerprints = fingerprint_counts(&destination.attachments);
     let mut missing_attachments = Vec::new();
     for asset in &source.attachments {
-        if !dest_hashes.contains(asset.fingerprint.as_str())
-            && !dest_name_sizes.contains(&(asset.key.as_str(), asset.bytes))
-        {
-            missing_attachments.push(asset.name.clone());
+        match destination_attachment_fingerprints.get_mut(asset.fingerprint.as_str()) {
+            Some(count) if *count > 0 => *count -= 1,
+            _ => missing_attachments.push(entry_label(
+                &asset.name,
+                &asset.path,
+                duplicate_attachment_keys.contains(asset.key.as_str()),
+            )),
         }
     }
-    let source_hashes: HashSet<&str> = source
-        .attachments
-        .iter()
-        .map(|a| a.fingerprint.as_str())
-        .collect();
-    let added_attachments = destination
-        .attachments
-        .iter()
-        .filter(|a| !source_hashes.contains(a.fingerprint.as_str()))
-        .count();
-    let verdict = if missing_notes.is_empty() && missing_attachments.is_empty() {
-        "pass"
-    } else {
-        "loss-detected"
-    }
-    .to_string();
+    let added_attachments = destination_attachment_fingerprints.values().sum();
+    let verdict =
+        if missing_notes.is_empty() && changed_notes.is_empty() && missing_attachments.is_empty() {
+            "pass"
+        } else {
+            "loss-detected"
+        }
+        .to_string();
     CompareReport {
         schema_version: SCHEMA_VERSION,
         source: source.totals.clone(),
@@ -843,13 +892,41 @@ pub fn compare(source: &ScanReport, destination: &ScanReport) -> CompareReport {
         missing_notes,
         changed_notes,
         missing_attachments,
-        added_notes: destination
-            .notes
-            .iter()
-            .filter(|n| !source_note_keys.contains(n.key.as_str()))
+        added_notes: unmatched_destination_notes
+            .into_iter()
+            .filter(|matched| *matched)
             .count(),
         added_attachments,
         verdict,
+    }
+}
+
+fn duplicate_keys<'a>(keys: impl Iterator<Item = &'a str>) -> HashSet<&'a str> {
+    let mut counts = BTreeMap::new();
+    for key in keys {
+        *counts.entry(key).or_insert(0usize) += 1;
+    }
+    counts
+        .into_iter()
+        .filter_map(|(key, count)| (count > 1).then_some(key))
+        .collect()
+}
+
+fn fingerprint_counts(attachments: &[AttachmentEntry]) -> BTreeMap<&str, usize> {
+    let mut counts = BTreeMap::new();
+    for attachment in attachments {
+        *counts
+            .entry(attachment.fingerprint.as_str())
+            .or_insert(0usize) += 1;
+    }
+    counts
+}
+
+fn entry_label(name: &str, path: &str, has_collision: bool) -> String {
+    if has_collision && !path.is_empty() {
+        format!("{name} [{path}]")
+    } else {
+        name.to_string()
     }
 }
 
@@ -962,6 +1039,47 @@ mod tests {
         let destination = scan_path(dest_root.path(), Limits::default()).unwrap();
         let result = compare(&source, &destination);
         assert_eq!(result.missing_attachments, vec!["photo.jpg", "voice.m4a"]);
+        assert_eq!(result.verdict, "loss-detected");
+    }
+
+    #[test]
+    fn compare_keeps_duplicate_titles_and_same_sized_attachment_bytes_distinct() {
+        let source_root = tempfile::tempdir().unwrap();
+        let destination_root = tempfile::tempdir().unwrap();
+        fs::create_dir_all(source_root.path().join("A")).unwrap();
+        fs::create_dir_all(source_root.path().join("B")).unwrap();
+        fs::create_dir_all(destination_root.path().join("C")).unwrap();
+        fs::write(source_root.path().join("A/note.md"), "# Same\nAlpha").unwrap();
+        fs::write(source_root.path().join("A/receipt.jpg"), b"aaa").unwrap();
+        fs::write(source_root.path().join("B/note.md"), "# Same\nBravo").unwrap();
+        fs::write(source_root.path().join("B/receipt.jpg"), b"bbb").unwrap();
+        fs::write(destination_root.path().join("C/note.md"), "# Same\nBravo").unwrap();
+        fs::write(destination_root.path().join("C/receipt.jpg"), b"aaa").unwrap();
+
+        let source = scan_path(source_root.path(), Limits::default()).unwrap();
+        let destination = scan_path(destination_root.path(), Limits::default()).unwrap();
+        let result = compare(&source, &destination);
+
+        assert_eq!(result.missing_notes, vec!["Same [A/note.md]"]);
+        assert_eq!(
+            result.missing_attachments,
+            vec!["receipt.jpg [B/receipt.jpg]"]
+        );
+        assert!(result.changed_notes.is_empty());
+        assert_eq!(result.verdict, "loss-detected");
+    }
+
+    #[test]
+    fn changed_note_is_a_loss_for_automation() {
+        let source_root = tempfile::tempdir().unwrap();
+        let destination_root = tempfile::tempdir().unwrap();
+        fs::write(source_root.path().join("one.md"), "# One\nSource").unwrap();
+        fs::write(destination_root.path().join("one.md"), "# One\nChanged").unwrap();
+        let source = scan_path(source_root.path(), Limits::default()).unwrap();
+        let destination = scan_path(destination_root.path(), Limits::default()).unwrap();
+        let result = compare(&source, &destination);
+
+        assert_eq!(result.changed_notes, vec!["One"]);
         assert_eq!(result.verdict, "loss-detected");
     }
 

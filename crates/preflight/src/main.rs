@@ -43,7 +43,7 @@ struct CompareArgs {
     /// Print versioned JSON for scripts
     #[arg(long)]
     json: bool,
-    /// Exit with code 2 when missing notes or attachments are found
+    /// Exit with code 2 when notes are missing or changed, or attachments are missing
     #[arg(long)]
     fail_on_loss: bool,
     #[command(flatten)]
