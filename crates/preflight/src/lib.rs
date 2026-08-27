@@ -3,7 +3,7 @@ use regex::Regex;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::collections::{BTreeMap, BTreeSet, HashSet};
-use std::fs::{self, File};
+use std::fs::File;
 use std::io::{self, Read};
 use std::path::{Component, Path};
 use walkdir::WalkDir;
@@ -177,7 +177,7 @@ pub fn scan_path(path: &Path, limits: Limits) -> Result<ScanReport, String> {
                 limits.max_entry_bytes / 1024 / 1024
             ));
         }
-        let bytes = fs::read(path).map_err(|e| format!("cannot read {}: {e}", path.display()))?;
+        let bytes = read_bounded(path, limits.max_entry_bytes)?;
         let name = path
             .file_name()
             .and_then(|v| v.to_str())
@@ -224,8 +224,10 @@ fn read_directory(root: &Path, limits: Limits) -> Result<Vec<RawFile>, String> {
         enforce_size_limits(size, &mut total, limits)?;
         let relative = item.path().strip_prefix(root).map_err(|e| e.to_string())?;
         let safe = normalize_path(relative)?;
-        let bytes = fs::read(item.path())
-            .map_err(|e| format!("cannot read {}: {e}", item.path().display()))?;
+        let bytes = read_bounded(item.path(), limits.max_entry_bytes)?;
+        if bytes.len() as u64 > size {
+            enforce_size_limits(bytes.len() as u64 - size, &mut total, limits)?;
+        }
         files.push(RawFile { path: safe, bytes });
     }
     Ok(files)
@@ -243,7 +245,7 @@ fn read_zip(path: &Path, limits: Limits) -> Result<Vec<RawFile>, String> {
     let mut total = 0u64;
     let mut files = Vec::new();
     for index in 0..zip.len() {
-        let mut entry = zip
+        let entry = zip
             .by_index(index)
             .map_err(|e| format!("cannot inspect ZIP entry {index}: {e}"))?;
         if entry.is_dir() {
@@ -253,7 +255,8 @@ fn read_zip(path: &Path, limits: Limits) -> Result<Vec<RawFile>, String> {
             .enclosed_name()
             .ok_or_else(|| format!("unsafe ZIP path rejected: {}", entry.name()))?;
         let safe = normalize_path(&enclosed)?;
-        enforce_size_limits(entry.size(), &mut total, limits)?;
+        let entry_size = entry.size();
+        enforce_size_limits(entry_size, &mut total, limits)?;
         if entry.compressed_size() > 0
             && entry.size() > 10 * 1024 * 1024
             && entry.size() / entry.compressed_size().max(1) > 200
@@ -262,11 +265,35 @@ fn read_zip(path: &Path, limits: Limits) -> Result<Vec<RawFile>, String> {
         }
         let mut bytes = Vec::with_capacity(entry.size().min(4 * 1024 * 1024) as usize);
         entry
+            .take(limits.max_entry_bytes + 1)
             .read_to_end(&mut bytes)
             .map_err(|e| format!("cannot read ZIP entry {safe}: {e}"))?;
+        if bytes.len() as u64 > limits.max_entry_bytes {
+            return Err(format!(
+                "ZIP entry {safe} expanded beyond the configured entry limit"
+            ));
+        }
+        if bytes.len() as u64 > entry_size {
+            enforce_size_limits(bytes.len() as u64 - entry_size, &mut total, limits)?;
+        }
         files.push(RawFile { path: safe, bytes });
     }
     Ok(files)
+}
+
+fn read_bounded(path: &Path, limit: u64) -> Result<Vec<u8>, String> {
+    let file = File::open(path).map_err(|e| format!("cannot read {}: {e}", path.display()))?;
+    let mut bytes = Vec::new();
+    file.take(limit + 1)
+        .read_to_end(&mut bytes)
+        .map_err(|e| format!("cannot read {}: {e}", path.display()))?;
+    if bytes.len() as u64 > limit {
+        return Err(format!(
+            "{} grew beyond the configured entry limit while being read",
+            path.display()
+        ));
+    }
+    Ok(bytes)
 }
 
 fn enforce_size_limits(size: u64, total: &mut u64, limits: Limits) -> Result<(), String> {
@@ -323,7 +350,18 @@ fn build_report(
 
     for file in files {
         let ext = extension(&file.path);
-        if ext == "enex" {
+        if matches!(ext.as_str(), "one" | "sqlite" | "db" | "notestore") {
+            risks.add(
+                "proprietary-database",
+                "Proprietary database export cannot be inspected",
+                "danger",
+                &file.path,
+            );
+            let warning = "A proprietary notes database was found. Export through the source app first; Preflight does not bypass encryption or decode private databases.".to_string();
+            if !warnings.contains(&warning) {
+                warnings.push(warning);
+            }
+        } else if ext == "enex" {
             parse_enex(
                 &file,
                 &mut notes,
@@ -894,6 +932,7 @@ fn human_bytes(value: u64) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::fs;
     use std::io::Write;
 
     #[test]
@@ -939,6 +978,16 @@ mod tests {
         let report = scan_path(&zip_path, Limits::default()).unwrap();
         assert_eq!(report.totals.notes, 1);
         assert_eq!(report.source_kind, "zip");
+
+        let unsafe_path = root.path().join("unsafe.zip");
+        let file = File::create(&unsafe_path).unwrap();
+        let mut zip = zip::ZipWriter::new(file);
+        zip.start_file("../outside.md", zip::write::SimpleFileOptions::default())
+            .unwrap();
+        zip.write_all(b"# Must not escape").unwrap();
+        zip.finish().unwrap();
+        let error = scan_path(&unsafe_path, Limits::default()).unwrap_err();
+        assert!(error.contains("unsafe ZIP path"));
     }
 
     #[test]
