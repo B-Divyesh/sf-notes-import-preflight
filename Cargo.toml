@@ -1,0 +1,10 @@
+[workspace]
+members = ["crates/preflight"]
+resolver = "2"
+
+[workspace.package]
+edition = "2021"
+license = "MIT"
+repository = "https://github.com/B-Divyesh/sf-notes-import-preflight"
+rust-version = "1.82"
+

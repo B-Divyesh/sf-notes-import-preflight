@@ -1,0 +1,29 @@
+[package]
+name = "notes-preflight"
+version = "0.1.0"
+description = "Local inventory and loss check for notes migrations"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+readme = "../../README.md"
+keywords = ["notes", "migration", "backup", "cli"]
+categories = ["command-line-utilities"]
+
+[[bin]]
+name = "notes-preflight"
+path = "src/main.rs"
+
+[dependencies]
+base64 = "0.22"
+clap = { version = "4.5", features = ["derive"] }
+regex = "1.11"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"
+walkdir = "2.5"
+zip = { version = "2.2", default-features = false, features = ["deflate", "bzip2", "zstd"] }
+
+[dev-dependencies]
+tempfile = "3"
+
