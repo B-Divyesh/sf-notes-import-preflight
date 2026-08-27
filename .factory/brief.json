@@ -1,0 +1,12 @@
+{
+  "slug": "notes-import-preflight",
+  "title": "Notes Import Preflight",
+  "territory": "utilities",
+  "user": "A person moving years of notes between tools who needs to measure what content, attachments, links, and metadata will survive before committing to an import.",
+  "smallest_useful_product": "Local CLI that inventories an export archive, reports counts/types/attachment sizes/link targets, samples conversion-risk features, and compares a destination export for loss.",
+  "success_measure": "For supported export fixtures, it finds 100% of intentionally missing attachments and reports notebook/note counts before a destination import is started.",
+  "artifact_class": "cli",
+  "monetization": "one-time",
+  "constraints": "Run locally; parsers must treat archives as untrusted; do not bypass application encryption or scrape accounts; preserve only aggregate diagnostics by default.",
+  "state": "RESEARCHED"
+}
