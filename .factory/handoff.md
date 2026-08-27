@@ -2,7 +2,7 @@
 
 ## Release decision
 
-The verifier's P0/P1/P2 release blockers from candidate `3ef5202cd3223fa6b6506b818ef7b2b12d9729d8` are repaired. This handoff will be updated with the final commit and deployed-response evidence after deployment.
+The verifier's P0/P1/P2 release blockers from candidate `3ef5202cd3223fa6b6506b818ef7b2b12d9729d8` are repaired and deployed. Repair commit: `f61ea63`.
 
 ## What changed
 
@@ -51,7 +51,10 @@ Lighthouse was attempted twice with the supplied Chromium (`CHROME_PATH` plus no
 
 - Ready-to-publish artifact: `target/package/notes-preflight-0.1.1.crate`; do **not** publish from this worker. Factory command: `cargo package -p notes-preflight --allow-dirty`.
 - Deployment class remains static. Work-order deployment command: `npm ci && npm run build:site`; directory: `dist/site`.
-- Final commit/push and live URL/header evidence: pending deployment.
+- Pushed `f61ea63` to `origin/main` and deployed `dist/site` to `https://notes-import-preflight.sociobot.in/` (Azure deployment `c6011dad-9f36-4258-9f74-172fde85dee5`).
+- Live `/` SHA-256 is `e4e7fda13f26c9d1d44189e0be6958ad7a9efe804d5c395dfed00fd7f49a03b8`, exactly matching `dist/site/index.html`.
+- Live `/assets/main-QLFPhn1u.js` and the hashed Space Grotesk font return `public, max-age=31536000, immutable`; live `/sw.js` and `/` return `public, max-age=0, must-revalidate`; live responses carry the configured CSP and security headers.
+- Post-deploy verifier: HTTP 200, 1.29 s local load, no console/page errors, title/lang/one `h1`/`main`/alt checks pass. Live Playwright at desktop and 390 px found no errors, 390 px has no horizontal overflow, the skip link receives first keyboard focus, service worker controls the page, and offline reload retains the application title. Axe Core returned zero WCAG 2/2.1 A/AA violations at both widths.
 
 ## Known gaps
 
