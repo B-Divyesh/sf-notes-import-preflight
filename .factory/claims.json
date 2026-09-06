@@ -1,0 +1,142 @@
+[
+  {
+    "id": "demo-sandbox",
+    "claim": "The CLI and /demo use bundled sample data without changing real data.",
+    "where": "landing sample action, demo banner, README",
+    "test": "npm run test:claims -- --grep '@claim:demo-sandbox$'",
+    "sandbox": "fresh temporary directory and demo browser context; verify realistic loss output, report files, and temporary output path"
+  },
+  {
+    "id": "install-git",
+    "claim": "The documented cargo install command installs a working public MIT-licensed artifact.",
+    "where": "landing install section, README",
+    "test": "npm run test:claims -- --grep '@claim:install-git$'",
+    "sandbox": "fresh CARGO_HOME and install root; install from the public Git repository and run --help"
+  },
+  {
+    "id": "cli-read-only",
+    "claim": "CLI scans do not modify source files.",
+    "where": "landing facts, privacy, README",
+    "test": "npm run test:claims -- --grep '@claim:cli-read-only$'",
+    "sandbox": "copied sample export; compare source hash and modification time before and after a real scan"
+  },
+  {
+    "id": "browser-private",
+    "claim": "Browser sample names, contents, and results are not uploaded or saved.",
+    "where": "landing facts, demo banner, privacy, README",
+    "test": "npm run test:claims -- --grep '@claim:browser-private$'",
+    "sandbox": "fresh browser context; record the whole demo flow request log and inspect local and session storage"
+  },
+  {
+    "id": "no-tracking",
+    "claim": "The site has no analytics, advertising cookies, tracking pixels, or third-party scripts.",
+    "where": "privacy, README",
+    "test": "npm run test:claims -- --grep '@claim:no-tracking$'",
+    "sandbox": "fresh browser context; record initial requests, cookies, and local storage"
+  },
+  {
+    "id": "inventory-counts",
+    "claim": "Reports include notebook, note, attachment, and attachment-byte counts, and browser reports download as JSON.",
+    "where": "browser report, README",
+    "test": "npm run test:claims -- --grep '@claim:inventory-counts$'",
+    "sandbox": "bundled sample in CLI and browser; assert exact counts and a JSON download"
+  },
+  {
+    "id": "risk-link-metadata",
+    "claim": "Reports include link targets, metadata coverage, and conversion risks.",
+    "where": "landing, README",
+    "test": "npm run test:claims -- --grep '@claim:risk-link-metadata$'",
+    "sandbox": "bundled sample with dated metadata, tags, links, tasks, a table, code, a wiki link, and audio"
+  },
+  {
+    "id": "directory-zip",
+    "claim": "The CLI scans directories and ZIP archives.",
+    "where": "landing facts, README",
+    "test": "npm run test:claims -- --grep '@claim:directory-zip$'",
+    "sandbox": "scan the same bundled sample as a directory and a ZIP; compare totals"
+  },
+  {
+    "id": "supported-formats",
+    "claim": "The CLI recognizes Markdown, HTML, text, RTF, ENEX, and JSON note files.",
+    "where": "landing folder label, README",
+    "test": "npm run test:claims -- --grep '@claim:supported-formats$'",
+    "sandbox": "fresh directory containing one valid note in every named format"
+  },
+  {
+    "id": "archive-bounds",
+    "claim": "ZIP entries are scanned without extraction and unsafe paths and configured boundaries are rejected.",
+    "where": "README",
+    "test": "npm run test:claims -- --grep '@claim:archive-bounds$'",
+    "sandbox": "malicious traversal ZIP plus a valid ZIP above a one-entry limit; assert errors and no extracted file"
+  },
+  {
+    "id": "schema-compat",
+    "claim": "The CLI writes schema 2 JSON and reads schema 1 reports.",
+    "where": "landing facts, README",
+    "test": "npm run test:claims -- --grep '@claim:schema-compat$'",
+    "sandbox": "write a real schema 2 report, convert it to the prior shape, and read it through the CLI"
+  },
+  {
+    "id": "report-redaction",
+    "claim": "Saved reports omit note bodies and attachment bytes.",
+    "where": "landing limits, privacy, README",
+    "test": "npm run test:claims -- --grep '@claim:report-redaction$'",
+    "sandbox": "fresh files with unique private markers; scan to JSON and assert the markers are absent"
+  },
+  {
+    "id": "loss-comparison",
+    "claim": "Comparison finds missing or changed notes and missing attachments.",
+    "where": "landing, terminal recording, README",
+    "test": "npm run test:claims -- --grep '@claim:loss-comparison$'",
+    "sandbox": "bundled before-and-after sample; assert one changed note, one missing attachment, and loss verdict"
+  },
+  {
+    "id": "collision-safe",
+    "claim": "Duplicate names and equal-size different attachments cannot hide loss.",
+    "where": "README",
+    "test": "npm run test:claims -- --grep '@claim:collision-safe$'",
+    "sandbox": "two same-titled notes and equal-size attachment names against one surviving copy"
+  },
+  {
+    "id": "exit-codes",
+    "claim": "The CLI exits 0 after success, 1 for invalid input, and 2 when fail-on-loss detects loss.",
+    "where": "README, CLI help",
+    "test": "npm run test:claims -- --grep '@claim:exit-codes$'",
+    "sandbox": "run valid scan, missing input, and lossy comparison as independent processes"
+  },
+  {
+    "id": "unsupported-database",
+    "claim": "Proprietary database exports are reported as unsupported without an encryption bypass.",
+    "where": "landing limits, README",
+    "test": "npm run test:claims -- --grep '@claim:unsupported-database$'",
+    "sandbox": "fresh SQLite-named fixture; assert zero decoded notes and the unsupported warning"
+  },
+  {
+    "id": "offline-reload",
+    "claim": "The browser demo reloads and inspects its folder sample offline after the first visit.",
+    "where": "landing facts",
+    "test": "npm run test:claims -- --grep '@claim:offline-reload$'",
+    "sandbox": "own fresh browser context; wait for service-worker control, set context offline, reload, and assert populated output"
+  },
+  {
+    "id": "plus-price",
+    "claim": "Preflight Plus costs $19 once and is not a subscription.",
+    "where": "landing first screen, Plus section, terms, README",
+    "test": "npm run test:claims -- --grep '@claim:plus-price$'",
+    "sandbox": "fresh browser; assert the exact offer and the product billing checkout target"
+  },
+  {
+    "id": "plus-features",
+    "claim": "A valid license enables browser comparison, a saved baseline, a printable audit, and a setup-support path.",
+    "where": "Plus section, terms, README",
+    "test": "npm run test:claims -- --grep '@claim:plus-features$'",
+    "sandbox": "recorded valid verification fixture; scan, persist and reload a baseline, invoke print, and verify support path"
+  },
+  {
+    "id": "license-verification",
+    "claim": "License verification sends only the token at most once per day and invalid licenses stay locked.",
+    "where": "privacy, README",
+    "test": "npm run test:claims -- --grep '@claim:license-verification$'",
+    "sandbox": "recorded invalid verification fixture; inspect method, query, body, reload frequency, and locked state"
+  }
+]

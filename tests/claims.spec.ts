@@ -45,7 +45,11 @@ test("the public Git install command produces a working consumer binary @claim:i
   expect(help).toContain("Usage: notes-preflight <COMMAND>");
   expect(help).toContain("scan");
   expect(help).toContain("compare");
-  expect(readFileSync(resolve("LICENSE"), "utf8")).toContain("MIT License");
+  expect(help).toContain("demo");
+  expect(execFileSync(join(root, "bin/notes-preflight"), ["--version"], { encoding: "utf8" })).toContain("0.2.0");
+  const demo = execFileSync(join(root, "bin/notes-preflight"), ["demo"], { encoding: "utf8" });
+  expect(demo).toContain("Missing attachments (1)");
+  expect(readFileSync(resolve("LICENSE"), "utf8")).toContain("Permission is hereby granted, free of charge");
   rmSync(root, { recursive: true });
   rmSync(cargoHome, { recursive: true });
 });
