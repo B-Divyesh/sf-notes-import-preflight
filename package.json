@@ -1,11 +1,14 @@
 {
   "name": "notes-import-preflight-site",
   "private": true,
-  "version": "0.1.1",
+  "version": "0.2.0",
   "type": "module",
   "scripts": {
     "dev": "vite --config site/vite.config.ts",
-    "test": "vitest run && cargo test --workspace",
+    "test": "vitest run site/src && cargo test --workspace && npm run test:claims",
+    "test:claims": "npm run build:site && cargo build -p notes-preflight && playwright test",
+    "test:site": "npm run build:site && playwright test tests/site.spec.ts",
+    "preview:test": "node scripts/serve-site.mjs",
     "typecheck": "tsc --noEmit",
     "build:site": "vite build --config site/vite.config.ts",
     "build:cli": "cargo build --release -p notes-preflight && node scripts/copy-cli.mjs",
@@ -17,6 +20,8 @@
     "@types/node": "^22.18.0",
     "typescript": "^5.9.2",
     "vite": "^7.1.3",
+    "@axe-core/playwright": "4.10.2",
+    "@playwright/test": "1.58.2",
     "vitest": "^3.2.4"
   }
 }

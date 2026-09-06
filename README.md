@@ -1,71 +1,78 @@
 # Notes Import Preflight
 
-Notes Import Preflight is a local, read-only quality gate for people moving years of notes between apps. It inventories a directory or ZIP export before import, calls out fragile content, and compares a destination export to find missing notes and attachments. Archive contents never leave the machine.
+Notes Import Preflight is for people moving years of notes between apps. The local CLI counts notes and attachments before an import, flags conversion risks, and compares a destination export for loss.
 
 ## Install
 
-Download a release binary, or build from source with Rust 1.82 or newer:
+Install Rust 1.82 or newer. Then install the public source:
 
 ```sh
-cargo install --path crates/preflight
+cargo install --git https://github.com/B-Divyesh/sf-notes-import-preflight.git --locked
 ```
 
-## Usage
+The factory publishes registry packages and release binaries separately. This repository does not claim an unpublished crates.io package.
 
-Inspect an export. Directories and `.zip` archives are supported; Apple Notes HTML/Markdown exports, Obsidian vaults, Joplin Markdown exports, generic HTML, text, and Evernote `.enex` files are recognized.
+## Try the bundled sample
+
+Run a complete scan and comparison without preparing files:
+
+```sh
+notes-preflight demo
+```
+
+The command copies the bundled five-note sample into a new temporary directory. It finds one changed note and one missing audio attachment, writes two JSON reports, and prints their location. Nothing outside that directory is changed.
+
+The browser sample is at [notes-import-preflight.sociobot.in/demo/](https://notes-import-preflight.sociobot.in/demo/). It uses only bundled data in memory and does not read saved licenses or baselines.
+
+## Scan and compare
+
+Scan a directory or ZIP archive:
 
 ```sh
 notes-preflight scan ./my-export
 notes-preflight scan ./my-export.zip --json > before.json
 ```
 
-After importing, export the destination and compare it with the source:
+After importing a copy, export the destination and compare it:
 
 ```sh
-notes-preflight compare ./my-export.zip ./destination-export
+notes-preflight compare ./before.json ./destination-export
 notes-preflight compare ./before.json ./destination-export --json --fail-on-loss
 ```
 
-`--fail-on-loss` exits with code 2 when a note is missing or changed, or an attachment is missing, which makes it useful in scripts. Duplicate note titles and filenames are never collapsed: note and attachment fingerprints are matched as occurrence-aware sets, and duplicate losses include the source-relative path. Invalid input or an unsafe archive exits with code 1. `--max-entry-mb` and `--max-total-mb` lower or raise bounded ZIP scan limits; archives are streamed and never extracted.
+The CLI returns 0 after a completed command, 1 for invalid input, and 2 when `--fail-on-loss` finds loss. Its JSON uses schema 2 and can read schema 1 reports.
 
-The JSON schema is versioned with `schema_version`. Schema 2 adds source-relative paths for collision-safe diagnostics; schema 1 reports remain readable. Reports contain aggregate diagnostics, normalized names, sizes, paths, and content fingerprints; note bodies and attachment bytes are never written to the report.
+The scanner recognizes Markdown, HTML, text, RTF, ENEX, and JSON note files. It reports note and attachment counts, attachment bytes and types, link targets, metadata coverage, and sampled conversion risks. Comparisons find missing or changed notes and missing attachments. Duplicate names are matched by content fingerprint and occurrence count.
 
-## What it checks
+ZIP entries are streamed without extraction. Entry counts, per-entry bytes, total bytes, paths, and suspicious compression ratios are bounded. Proprietary databases are reported as unsupported; the tool does not access accounts or bypass encryption.
 
-- notebook, note, attachment, and byte counts
-- attachment types and unusually large files
-- internal, local-file, external, and unresolved link targets
-- metadata coverage for created/updated timestamps and tags
-- conversion risks such as tables, tasks, wiki links, embeds, data URLs, math, code blocks, audio, and video
-- missing or changed notes and attachments in a destination export
+Saved reports contain aggregate diagnostics, normalized names, sizes, paths, and SHA-256 fingerprints. They do not contain note bodies or attachment bytes.
 
-Encrypted or proprietary database exports are reported honestly as unsupported; this tool does not bypass encryption or access any notes account.
+## Preflight Plus
 
-## Site and browser demo
+The free CLI and browser folder check remain complete. Preflight Plus costs $19 once and is not a subscription. A valid license adds browser comparison, one locally saved baseline, printable audit sheets, and 30 days of setup help.
 
-The static documentation site includes a private browser-side file inventory demo and the paid Preflight Plus convenience tier. Browser files stay in the tab.
-
-```sh
-npm install
-npm run dev
-npm run build:site  # output: dist/site
-```
+Sociobot/Dodo handles checkout and refunds. The site sends only the license token for verification, at most once per day after a successful check. Source files remain on the device.
 
 ## Develop and verify
 
+Use Node.js 22 or newer and Rust 1.82 or newer from a clean checkout:
+
 ```sh
-cargo test --workspace
-cargo run -p notes-preflight -- --help
-cargo package -p notes-preflight --allow-dirty
+npm ci
 npm test
+npm run typecheck
 npm run build
+cargo package -p notes-preflight --allow-dirty
 ```
 
-`npm run build` is the reproducible factory build command and produces the deployable site at `dist/site/index.html` plus a packaged CLI binary in `dist/bin/`.
+`npm test` runs unit, integration, browser, accessibility, privacy, offline, recovery, and public-claim checks. `npm run build` creates the static site in `dist/site/` and the CLI in `dist/bin/`.
 
-## Privacy and security
+The registry publish step belongs to the factory operator. To verify the packaged source locally, run `cargo package -p notes-preflight --allow-dirty` and install the resulting crate into a temporary Cargo root.
 
-There is no telemetry. CLI scans are local and read-only. The browser demo runs locally in the browser and does not upload file contents. ZIP paths, file counts, per-entry size, and total decompressed size are bounded before parsing. See the site’s privacy and terms pages for the optional license flow.
+## Privacy
+
+The CLI reads source paths without modifying them. The site has no analytics, advertising cookies, tracking pixels, or third-party scripts. Browser inspection does not upload archive names, contents, or results. See the public [privacy policy](https://notes-import-preflight.sociobot.in/privacy/).
 
 ## License
 

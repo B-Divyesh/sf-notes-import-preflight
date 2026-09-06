@@ -1,7 +1,10 @@
 use clap::{Args, Parser, Subcommand};
 use notes_preflight::{compare, human_compare, human_scan, scan_path, Limits};
+use serde_json::json;
+use std::fs;
 use std::path::PathBuf;
 use std::process::ExitCode;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 #[derive(Parser)]
 #[command(
@@ -17,10 +20,19 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Command {
+    /// Run a complete scan and comparison on bundled sample data
+    Demo(DemoArgs),
     /// Inventory a directory, ZIP, ENEX, or saved JSON report
     Scan(ScanArgs),
     /// Compare a source export/report with a destination export
     Compare(CompareArgs),
+}
+
+#[derive(Args)]
+struct DemoArgs {
+    /// Print the sample scan, comparison, and output directory as JSON
+    #[arg(long)]
+    json: bool,
 }
 
 #[derive(Args)]
@@ -94,6 +106,7 @@ fn main() -> ExitCode {
 
 fn run(cli: Cli) -> Result<u8, String> {
     match cli.command {
+        Command::Demo(args) => run_demo(args),
         Command::Scan(args) => {
             let report = scan_path(&args.path, args.limits.values()?)?;
             if args.json {
@@ -126,4 +139,118 @@ fn run(cli: Cli) -> Result<u8, String> {
             })
         }
     }
+}
+
+const DEMO_FILES: &[(&str, &[u8], bool)] = &[
+    (
+        "Work/Project Atlas.md",
+        include_bytes!("../examples/sample-export/Work/Project Atlas.md"),
+        true,
+    ),
+    (
+        "Work/Decision log.md",
+        include_bytes!("../examples/sample-export/Work/Decision log.md"),
+        true,
+    ),
+    (
+        "Personal/Travel plan.html",
+        include_bytes!("../examples/sample-export/Personal/Travel plan.html"),
+        true,
+    ),
+    (
+        "Personal/Voice memo.txt",
+        include_bytes!("../examples/sample-export/Personal/Voice memo.txt"),
+        true,
+    ),
+    (
+        "Reference/Recipe.md",
+        include_bytes!("../examples/sample-export/Reference/Recipe.md"),
+        true,
+    ),
+    (
+        "Work/receipt.jpg",
+        include_bytes!("../examples/sample-export/Work/receipt.jpg"),
+        true,
+    ),
+    (
+        "Work/interview.m4a",
+        include_bytes!("../examples/sample-export/Work/interview.m4a"),
+        false,
+    ),
+    (
+        "Reference/menu.pdf",
+        include_bytes!("../examples/sample-export/Reference/menu.pdf"),
+        true,
+    ),
+];
+
+fn run_demo(args: DemoArgs) -> Result<u8, String> {
+    let nonce = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map_err(|error| error.to_string())?
+        .as_millis();
+    let root = std::env::temp_dir().join(format!(
+        "notes-preflight-demo-{}-{nonce}",
+        std::process::id()
+    ));
+    let source = root.join("source-export");
+    let destination = root.join("destination-export");
+    fs::create_dir_all(&source).map_err(|error| format!("cannot create demo: {error}"))?;
+    fs::create_dir_all(&destination).map_err(|error| format!("cannot create demo: {error}"))?;
+    for (relative, contents, keep_in_destination) in DEMO_FILES {
+        write_demo_file(&source, relative, contents)?;
+        if *keep_in_destination {
+            let destination_contents: &[u8] = if *relative == "Work/Decision log.md" {
+                b"# Decision log\n\nThe importer flattened the decision table.\n"
+            } else {
+                contents
+            };
+            write_demo_file(&destination, relative, destination_contents)?;
+        }
+    }
+
+    let source_report = scan_path(&source, Limits::default())?;
+    let destination_report = scan_path(&destination, Limits::default())?;
+    let comparison = compare(&source_report, &destination_report);
+    let scan_path = root.join("source-report.json");
+    let compare_path = root.join("comparison-report.json");
+    fs::write(
+        &scan_path,
+        serde_json::to_vec_pretty(&source_report).map_err(|error| error.to_string())?,
+    )
+    .map_err(|error| format!("cannot save demo report: {error}"))?;
+    fs::write(
+        &compare_path,
+        serde_json::to_vec_pretty(&comparison).map_err(|error| error.to_string())?,
+    )
+    .map_err(|error| format!("cannot save demo comparison: {error}"))?;
+
+    if args.json {
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&json!({
+                "demo": true,
+                "output_directory": root,
+                "source_report": source_report,
+                "comparison": comparison
+            }))
+            .map_err(|error| error.to_string())?
+        );
+    } else {
+        println!("DEMO — BUNDLED SAMPLE DATA\n");
+        print!("{}", human_scan(&source_report));
+        println!();
+        print!("{}", human_compare(&comparison));
+        println!("\nSample files and JSON reports: {}", root.display());
+        println!("Nothing outside this temporary directory was read or changed.");
+    }
+    Ok(0)
+}
+
+fn write_demo_file(root: &std::path::Path, relative: &str, contents: &[u8]) -> Result<(), String> {
+    let path = root.join(relative);
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent).map_err(|error| format!("cannot create demo: {error}"))?;
+    }
+    fs::write(path, contents).map_err(|error| format!("cannot write demo: {error}"))
 }

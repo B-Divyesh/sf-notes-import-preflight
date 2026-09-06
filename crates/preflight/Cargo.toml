@@ -1,6 +1,6 @@
 [package]
 name = "notes-preflight"
-version = "0.1.1"
+version = "0.2.0"
 description = "Local inventory and loss check for notes migrations"
 edition.workspace = true
 license.workspace = true

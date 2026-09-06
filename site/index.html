@@ -4,166 +4,202 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#080a0d">
-    <meta name="description" content="Inspect a notes export locally before migration and catch missing attachments afterward.">
-    <title>Notes Import Preflight — know what will survive</title>
+    <meta name="description" content="Count notes and attachments before migration, then compare the destination export for missing or changed files.">
+    <title>Notes Import Preflight — check notes before migration</title>
+    <link rel="canonical" href="https://notes-import-preflight.sociobot.in/">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Notes Import Preflight">
+    <meta property="og:title" content="Check a notes export before you migrate">
+    <meta property="og:description" content="Count notes and attachments, flag conversion risks, and compare the destination export for loss.">
+    <meta property="og:url" content="https://notes-import-preflight.sociobot.in/">
+    <meta property="og:image" content="https://notes-import-preflight.sociobot.in/og-image.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Check a notes export before you migrate">
+    <meta name="twitter:description" content="Count notes and attachments, flag conversion risks, and compare the destination export for loss.">
+    <meta name="twitter:image" content="https://notes-import-preflight.sociobot.in/og-image.jpg">
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
     <link rel="preload" href="/assets/preflight-market.b48100d9.webp" imagesrcset="/assets/preflight-market-640.74bccda9.webp 640w, /assets/preflight-market-960.2992c541.webp 960w, /assets/preflight-market.b48100d9.webp 1280w" imagesizes="(max-width: 620px) 120vw, (max-width: 900px) 80vw, 65vw" as="image" type="image/webp" fetchpriority="high">
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to main content</a>
     <header class="site-header">
       <a class="wordmark" href="/"><span aria-hidden="true">NIP /</span> Notes Import Preflight</a>
-      <nav aria-label="Primary">
-        <a href="#inspect">Try it</a>
-        <a href="#install">Install</a>
-        <a href="#plus">Plus</a>
-        <a href="https://github.com/B-Divyesh/sf-notes-import-preflight">Source</a>
-      </nav>
+      <nav aria-label="Primary"><a href="/demo/">Demo</a><a href="/#install">Install</a><a href="/#plus">Plus</a><a href="/privacy/">Privacy</a></nav>
     </header>
+
+    <aside id="demo-banner" class="demo-banner" aria-label="Demo controls" hidden>
+      <p><strong>Demo — sample data, nothing is saved</strong></p>
+      <div><button id="reset-demo" type="button">Reset demo</button><a href="/">Start for real</a></div>
+    </aside>
 
     <main id="main">
       <section class="hero" aria-labelledby="hero-title">
         <div class="hero-copy">
-          <p class="eyebrow"><span class="status-dot" aria-hidden="true"></span> Local migration checkpoint</p>
-          <h1 id="hero-title">Know what survives <em>before</em> your notes move.</h1>
-          <p class="lede">Inventory notebooks, attachments, links, and fragile formatting. Then compare the destination export and catch losses while the original is still safe.</p>
+          <p class="eyebrow"><span class="status-dot" aria-hidden="true"></span> Local notes migration check</p>
+          <h1 id="hero-title" tabindex="-1">Check a notes export before you migrate</h1>
+          <p class="lede">For people moving years of notes, it counts the source and finds losses after import.</p>
           <div class="hero-actions">
-            <a class="button button-primary" href="#inspect">Inspect a folder</a>
-            <button class="copy-command" type="button" data-copy="cargo install notes-preflight"><code>cargo install notes-preflight</code><span>Copy</span></button>
+            <a class="button button-primary" href="/demo/">Try it with sample data</a>
+            <a class="button button-secondary" href="#inspect">Inspect your folder</a>
           </div>
-          <p class="privacy-note">No account. No upload. No telemetry.</p>
+          <p class="action-note">The sample opens a five-note export with a missing audio file.</p>
+          <ul class="plain-facts" aria-label="Product facts">
+            <li>Files stay on this device.</li>
+            <li>Works offline after the first visit.</li>
+            <li>Free CLI. Plus costs $19 once.</li>
+          </ul>
+          <aside id="demo-quick-result" class="demo-quick-result" hidden aria-label="Sample result" tabindex="-1">
+            <p><strong>Sample result</strong><span>Loss found</span></p>
+            <dl><div><dt>Notebooks</dt><dd>3</dd></div><div><dt>Notes</dt><dd>5</dd></div><div><dt>Attachments</dt><dd>3</dd></div></dl>
+            <p>One changed note and one missing audio file need review.</p>
+          </aside>
         </div>
         <figure class="hero-art">
-          <img src="/assets/preflight-market.b48100d9.webp" srcset="/assets/preflight-market-640.74bccda9.webp 640w, /assets/preflight-market-960.2992c541.webp 960w, /assets/preflight-market.b48100d9.webp 1280w" sizes="(max-width: 620px) 120vw, (max-width: 900px) 80vw, 65vw" width="1280" height="853" alt="A midnight archive stall where boxes of notes pass through a mint-lit inspection gate toward a detailed paper manifest." fetchpriority="high">
-          <figcaption>Inspect the cargo, then sign the manifest.</figcaption>
+          <img src="/assets/preflight-market.b48100d9.webp" srcset="/assets/preflight-market-640.74bccda9.webp 640w, /assets/preflight-market-960.2992c541.webp 960w, /assets/preflight-market.b48100d9.webp 1280w" sizes="(max-width: 620px) 120vw, (max-width: 900px) 80vw, 65vw" width="1280" height="853" alt="Boxes of notes, image cards, audio, and links pass through a bright local inspection scanner." fetchpriority="high">
+          <figcaption>Count the source. Check the destination.</figcaption>
         </figure>
       </section>
 
-      <section class="trust-strip" aria-label="Product facts">
-        <p><b>01</b> Read-only</p><p><b>02</b> ZIP-safe</p><p><b>03</b> Scriptable JSON</p><p><b>04</b> Open source CLI</p>
+      <section class="trust-strip" aria-label="Supported tasks">
+        <p><b>01</b> Read-only scan</p><p><b>02</b> Directory or ZIP</p><p><b>03</b> Versioned JSON</p><p><b>04</b> Open-source CLI</p>
       </section>
 
       <section class="inspector section" id="inspect" aria-labelledby="inspect-title">
         <div class="section-heading">
-          <p class="eyebrow">Browser counter / free</p>
-          <h2 id="inspect-title">Run a private spot check</h2>
-          <p>Select an unzipped export folder. This quick inventory runs entirely in this tab. Use the CLI for ZIP/ENEX parsing and a saved, scriptable manifest.</p>
+          <p class="eyebrow">Browser folder check</p>
+          <h2 id="inspect-title">Inspect an export folder</h2>
+          <p>Select an unzipped export. The browser counts supported files and shows common conversion risks.</p>
         </div>
         <div class="inspection-bench">
           <div class="drop-ticket">
-            <p class="ticket-number" aria-hidden="true">COUNTER 07</p>
-            <label class="file-label" for="folder-input"><span>Choose export folder</span><small>Markdown, HTML, text, JSON and attachments</small></label>
-            <input id="folder-input" type="file" webkitdirectory directory multiple>
-            <p class="fine-print">Your browser may confirm folder access. Files are read locally and never sent anywhere.</p>
+            <p class="ticket-number">SOURCE EXPORT</p>
+            <div class="real-input">
+              <label class="file-label" for="folder-input"><span>Choose export folder</span><small>Markdown, HTML, text, JSON, and attachments</small></label>
+              <input id="folder-input" type="file" webkitdirectory directory multiple>
+              <p class="fine-print">Your browser may confirm folder access. The CLI handles ZIP and ENEX files.</p>
+            </div>
+            <div class="demo-input" hidden>
+              <p><strong>Sample export loaded</strong></p>
+              <p>Five notes across Work, Personal, and Reference notebooks.</p>
+              <p>Includes a table, tasks, links, an image, audio, and a PDF.</p>
+            </div>
           </div>
           <div class="manifest" aria-live="polite" aria-busy="false">
-            <div class="manifest-head"><span>Inspection manifest</span><span id="manifest-state">Waiting</span></div>
+            <div class="manifest-head"><span>Export report</span><span id="manifest-state">Waiting</span></div>
             <div id="empty-state" class="state-panel">
               <span class="stamp" aria-hidden="true">READY</span>
-              <h3>Nothing on the belt yet</h3>
-              <p>Choose the folder created by your notes app’s export command.</p>
+              <h3>No export selected</h3>
+              <p>Choose the top folder created by your notes app.</p>
             </div>
             <div id="error-state" class="state-panel" hidden>
               <span class="stamp stamp-danger" aria-hidden="true">CHECK</span>
-              <h3>That folder could not be inspected</h3>
-              <p id="error-copy">Try the export again or use the CLI for this format.</p>
+              <h3>This folder could not be inspected</h3>
+              <p id="error-copy">Choose the top export folder or use the CLI.</p>
             </div>
             <div id="results" hidden>
               <dl class="metrics">
                 <div><dt>Notebooks</dt><dd id="metric-notebooks">0</dd></div>
                 <div><dt>Notes</dt><dd id="metric-notes">0</dd></div>
                 <div><dt>Attachments</dt><dd id="metric-attachments">0</dd></div>
-                <div><dt>Attachment load</dt><dd id="metric-bytes">0 B</dd></div>
+                <div><dt>Attachment size</dt><dd id="metric-bytes">0 B</dd></div>
               </dl>
-              <div class="risk-ledger">
-                <h3>Conversion watchlist</h3>
-                <ul id="risk-list"></ul>
-              </div>
-              <button id="download-report" class="button button-secondary" type="button" aria-label="Export JSON manifest">Export JSON manifest</button>
+              <div class="risk-ledger"><h3>Conversion risks</h3><ul id="risk-list"></ul></div>
+              <button id="download-report" class="button button-secondary" type="button">Export JSON report</button>
             </div>
           </div>
         </div>
-        <p id="network-state" class="network-state" role="status">Online — not required for inspection.</p>
+        <p id="network-state" class="network-state" role="status">Online. A connection is not needed for inspection.</p>
       </section>
 
-      <section class="section workflow" aria-labelledby="workflow-title">
+      <section class="section sample-recording" aria-labelledby="sample-title">
         <div class="section-heading">
-          <p class="eyebrow">The real workflow</p>
-          <h2 id="workflow-title">Two manifests. One honest answer.</h2>
+          <p class="eyebrow">Bundled CLI sample</p>
+          <h2 id="sample-title">See the command find a loss</h2>
+          <p>This recording comes from the shipped sample used by <code>notes-preflight demo</code>.</p>
         </div>
+        <figure class="terminal-recording">
+          <img src="/assets/terminal-demo.svg" width="1200" height="670" loading="lazy" alt="Terminal recording: the sample has five notes and three attachments; comparison finds one changed note and one missing audio file.">
+          <figcaption>Run the same sample locally. The command writes its reports to a new temporary folder.</figcaption>
+        </figure>
+      </section>
+
+      <section class="section workflow" id="how-it-works" aria-labelledby="workflow-title">
+        <div class="section-heading"><p class="eyebrow">How it works</p><h2 id="workflow-title">Check the source and destination</h2></div>
         <ol class="steps">
-          <li><span>01</span><h3>Scan the source</h3><p>Save the baseline before any importer touches the archive.</p><code>notes-preflight scan export.zip --json &gt; before.json</code></li>
-          <li><span>02</span><h3>Make the move</h3><p>Import into the new app, then export the destination once.</p><code>Use a copy. Keep the original.</code></li>
-          <li><span>03</span><h3>Compare the cargo</h3><p>Find missing or changed notes and attachment bytes with duplicate-safe fingerprints.</p><code>notes-preflight compare before.json after/ --fail-on-loss</code></li>
+          <li><span>01</span><h3>Scan the source</h3><p>Save a JSON report before you start the import.</p><code>notes-preflight scan export.zip --json &gt; before.json</code></li>
+          <li><span>02</span><h3>Import a copy</h3><p>Keep the original export. Export the destination when the import ends.</p><code>Keep the original unchanged.</code></li>
+          <li><span>03</span><h3>Compare both exports</h3><p>Review missing files and changed notes before you accept the move.</p><code>notes-preflight compare before.json after/ --fail-on-loss</code></li>
         </ol>
       </section>
 
       <section class="section command-section" id="install" aria-labelledby="install-title">
         <div class="section-heading">
-          <p class="eyebrow">Single local binary</p>
-          <h2 id="install-title">Built for the archive you actually have</h2>
-          <p>Scan directories, ZIP files, ENEX, Markdown, HTML, text, and common JSON exports. Bounded parsing treats every archive as untrusted.</p>
+          <p class="eyebrow">Install from the public source</p>
+          <h2 id="install-title">Install the command-line tool</h2>
+          <p>Install Rust 1.82 or newer. Then run this command from any folder.</p>
+          <p><a href="https://www.rust-lang.org/tools/install" target="_blank" rel="noreferrer">Install Rust <span class="external-note">(external site)</span></a></p>
         </div>
-        <div class="terminal" aria-label="CLI usage example">
-          <div class="terminal-bar"><i></i><i></i><i></i><span>migration-check.sh</span></div>
-          <pre tabindex="0" aria-label="CLI usage output, horizontally scrollable"><code><span class="prompt">$</span> notes-preflight scan apple-notes.zip
-
-PREFLIGHT MANIFEST
-apple-notes.zip
-
-Notebooks       18
-Notes        4,291
-Attachments  1,087  (2.4 GiB)
-Links        6,804  (23 unresolved)
-
-RISKS
-[WARNING] Audio recordings are often unsupported ×47
-[NOTICE] Tables may change layout ×112
-
-<span class="prompt">$</span> notes-preflight compare before.json destination/ --fail-on-loss
-MIGRATION CHECK: <span class="danger">LOSS DETECTED</span>
-Missing attachments (3): receipt.jpg, interview.m4a, sketch.png</code></pre>
+        <div class="install-command">
+          <code id="install-command">cargo install --git https://github.com/B-Divyesh/sf-notes-import-preflight.git --locked</code>
+          <button class="button button-secondary" type="button" data-copy="cargo install --git https://github.com/B-Divyesh/sf-notes-import-preflight.git --locked"><span>Copy install command</span></button>
         </div>
+        <p class="install-help">Then run <code>notes-preflight demo</code>. No account or sample download is needed.</p>
+      </section>
+
+      <section class="section limits" aria-labelledby="limits-title">
+        <div class="section-heading"><p class="eyebrow">Limits and privacy</p><h2 id="limits-title">Know what the tool does not do</h2></div>
+        <ul>
+          <li>It does not open notes accounts or bypass encryption.</li>
+          <li>It reports proprietary database exports as unsupported.</li>
+          <li>It checks inventory and bytes, not every visual detail.</li>
+          <li>It keeps note bodies and attachment bytes out of saved reports.</li>
+        </ul>
+        <p><a href="/privacy/">Read the privacy details</a>.</p>
       </section>
 
       <section class="section plus" id="plus" aria-labelledby="plus-title">
         <div class="plus-copy">
-          <p class="eyebrow">Preflight Plus / $19 once</p>
-          <h2 id="plus-title">A repeatable migration desk</h2>
-          <p>The open-source CLI stays complete. Plus adds a browser comparison workspace, locally saved baselines, printable audit sheets, and 30 days of setup help for one migration.</p>
-          <ul class="check-list"><li>One-time purchase, no subscription</li><li>Files still remain on your device</li><li>Sociobot/Dodo is merchant of record</li></ul>
-          <a class="button button-primary" href="https://api.sociobot.in/api/v1/products/notes-import-preflight/checkout">Buy Preflight Plus — $19</a>
+          <p class="eyebrow">Preflight Plus · $19 once</p>
+          <h2 id="plus-title">Repeat browser checks on this device</h2>
+          <p>The free CLI stays complete. Plus adds browser comparison, saved baselines, printable audit sheets, and 30 days of setup help.</p>
+          <ul class="check-list"><li>One-time purchase, not a subscription</li><li>Source files remain on your device</li><li>Sociobot/Dodo handles payment and refunds</li></ul>
+          <a class="button button-primary" id="buy-plus" href="https://api.sociobot.in/api/v1/products/notes-import-preflight/checkout">Buy Preflight Plus — $19 <span class="external-note">(hosted checkout)</span></a>
         </div>
         <div class="license-desk">
-          <p id="license-status" class="license-status">Free CLI + browser scan active</p>
+          <p id="license-status" class="license-status">Free CLI and browser scan active</p>
           <form id="license-form">
-            <label for="license-input">Have a license? Paste it here</label>
+            <label for="license-input">Paste an existing license</label>
             <div class="license-row"><input id="license-input" name="license" autocomplete="off" spellcheck="false"><button class="button button-secondary" type="submit">Verify license</button></div>
             <p id="license-message" role="status"></p>
           </form>
           <div id="plus-workspace" hidden>
-            <h3>Plus workspace unlocked</h3>
-            <p>Compare the current source scan with an unzipped destination export.</p>
+            <h3>Preflight Plus is active</h3>
+            <p>Compare the current source with an unzipped destination export.</p>
+            <div class="baseline-actions">
+              <button id="save-baseline" class="button button-secondary" type="button">Save current baseline</button>
+              <button id="load-baseline" class="button button-secondary" type="button">Load saved baseline</button>
+              <button id="clear-baseline" class="text-button" type="button">Delete saved baseline</button>
+            </div>
+            <p id="baseline-message" role="status"></p>
             <label class="file-label compact" for="destination-input"><span>Choose destination folder</span></label>
             <input id="destination-input" type="file" webkitdirectory directory multiple>
             <div id="compare-result" aria-live="polite"></div>
+            <button id="print-audit" class="button button-secondary" type="button">Print audit sheet</button>
+            <p><a id="support-link" href="mailto:support@sociobot.in?subject=Notes%20Import%20Preflight%20setup%20help">Email setup support</a> within 30 days of purchase. Never attach a private export.</p>
           </div>
         </div>
-      </section>
-
-      <section class="section faq" aria-labelledby="faq-title">
-        <div class="section-heading"><p class="eyebrow">Before you ask</p><h2 id="faq-title">No magic, no hidden access.</h2></div>
-        <details><summary>Does this modify my notes?</summary><p>No. The CLI opens exports read-only and never extracts ZIP archives. The browser demo only reads files you explicitly select.</p></details>
-        <details><summary>Can it open encrypted backups?</summary><p>No. It does not bypass application encryption, scrape accounts, or reverse proprietary databases. Export through the notes app first.</p></details>
-        <details><summary>What does a pass guarantee?</summary><p>It confirms inventory-level survival for recognized notes and attachment bytes. Formatting risks still need a sample review in the destination app.</p></details>
       </section>
     </main>
 
     <footer>
-      <p><span>NIP /</span> Inspect locally. Migrate deliberately.</p>
-      <nav aria-label="Legal"><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a><a href="https://github.com/B-Divyesh/sf-notes-import-preflight/blob/main/LICENSE">MIT license</a></nav>
-      <p>© 2026 Notes Import Preflight</p>
+      <p><span>NIP /</span> Check notes exports before migration.</p>
+      <nav aria-label="Footer"><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a><a href="https://github.com/B-Divyesh/sf-notes-import-preflight" target="_blank" rel="noreferrer">Source <span class="external-note">(external)</span></a></nav>
+      <p>Built by Param Factory · v0.2.0 · build 2</p>
     </footer>
+    <div id="route-announcement" class="sr-only" aria-live="polite"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

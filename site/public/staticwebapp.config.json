@@ -1,8 +1,4 @@
 {
-  "navigationFallback": {
-    "rewrite": "/index.html",
-    "exclude": ["/assets/*", "/fonts/*", "/*.{css,js,png,jpg,svg,webp,ico,woff2,json,txt,xml,wasm}"]
-  },
   "globalHeaders": {
     "Content-Security-Policy": "default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://api.sociobot.in https://pilot-api.sociobot.in; worker-src 'self'; form-action 'self' https://api.sociobot.in; frame-ancestors 'none'; upgrade-insecure-requests",
     "Permissions-Policy": "camera=(), geolocation=(), microphone=(), payment=(), usb=()",
@@ -11,6 +7,10 @@
     "X-Frame-Options": "DENY"
   },
   "routes": [
+    {
+      "route": "/404.html",
+      "statusCode": 404
+    },
     {
       "route": "/assets/*",
       "headers": {
@@ -36,6 +36,12 @@
       }
     },
     {
+      "route": "/demo/*",
+      "headers": {
+        "Cache-Control": "public, max-age=0, must-revalidate"
+      }
+    },
+    {
       "route": "/privacy/*",
       "headers": {
         "Cache-Control": "public, max-age=0, must-revalidate"
@@ -47,5 +53,10 @@
         "Cache-Control": "public, max-age=0, must-revalidate"
       }
     }
-  ]
+  ],
+  "responseOverrides": {
+    "404": {
+      "rewrite": "/404.html"
+    }
+  }
 }
