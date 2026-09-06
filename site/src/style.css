@@ -170,6 +170,7 @@ input[type="file"] { position: absolute; width: 1px; height: 1px; opacity: 0; }
 .check-list { margin: 32px 0; padding: 0; list-style: none; }
 .check-list li { margin: 12px 0; }
 .check-list li::before { content: "✓"; margin-right: 12px; color: var(--signal); font-weight: 700; }
+.checkout-message { min-height: 27px; margin: 16px 0 0; color: var(--amber); }
 .license-desk { padding: 40px; align-self: start; background: var(--stall); border-top: 5px solid var(--violet); box-shadow: 10px 10px 0 #221d2b; }
 .license-status { margin: 0 0 32px; color: var(--violet); font: 700 14px ui-monospace, monospace; letter-spacing: .07em; text-transform: uppercase; }
 .license-desk label:not(.file-label) { display: block; margin-bottom: 8px; font-weight: 700; }

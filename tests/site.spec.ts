@@ -41,6 +41,14 @@ test("invalid browser input stays marked for attention and a valid selection rec
   rmSync(valid, { recursive: true });
 });
 
+test("an unavailable checkout reports the registration dependency without leaving the product", async ({ page }) => {
+  await page.route("https://api.sociobot.in/api/v1/products/notes-import-preflight/checkout", (route) => route.fulfill({ status: 404, contentType: "application/json", body: '{"error":"enabled factory product"}' }));
+  await page.goto("/");
+  await page.locator("#buy-plus").click();
+  await expect(page.locator("#checkout-message")).toContainText("Checkout registration is pending");
+  expect(page.url()).toBe("http://127.0.0.1:4173/");
+});
+
 test("keyboard focus starts at the skip link and visible controls meet the touch target", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");

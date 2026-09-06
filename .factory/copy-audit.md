@@ -68,6 +68,11 @@ Audited 6 September 2026. Counts treat hyphenated terms and numbers as one word.
 | The free tools remain available. | 5 |
 | The license service did not respond. | 6 |
 | Try again later. | 3 |
+| Opening the hosted checkout. | 4 |
+| Checkout registration is pending. | 4 |
+| Existing licenses can still be restored here. | 7 |
+| The checkout could not open. | 5 |
+| Try again later or restore an existing license. | 8 |
 
 ## Terminology
 

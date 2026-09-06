@@ -175,6 +175,22 @@ function initializePaidFeatures() {
 
   const licenseForm = $("#license-form") as HTMLFormElement;
   const licenseInput = $("#license-input") as HTMLInputElement;
+  $("#buy-plus").addEventListener("click", async (event) => {
+    event.preventDefault();
+    const link = event.currentTarget as HTMLAnchorElement;
+    const message = $("#checkout-message");
+    message.textContent = "Opening the hosted checkout…";
+    try {
+      const response = await fetch(link.href, { redirect: "manual", credentials: "omit" });
+      if (response.status === 404) {
+        message.textContent = "Checkout registration is pending. Existing licenses can still be restored here.";
+        return;
+      }
+      location.assign(link.href);
+    } catch {
+      message.textContent = "The checkout could not open. Try again later or restore an existing license.";
+    }
+  });
   licenseForm.addEventListener("submit", async (event) => {
     event.preventDefault();
     const token = licenseInput.value.trim();
