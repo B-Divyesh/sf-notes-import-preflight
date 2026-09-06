@@ -2,7 +2,7 @@
 
 ## Release status
 
-The free CLI, browser folder check, one-click sample, paid feature implementation, site routes, and all declared claims are ready. The live release matches the built candidate.
+Verification 3 found one release finding. The free CLI, browser folder check, one-click sample, paid feature implementation, site routes, and all 20 declared claims work, and the live release matches the built candidate. However, public copy promises **30 days of setup help** while `.factory/claims.json` and its test cover only that an email support path exists. This unlisted quantitative claim must be removed or declared and tested before the product can be marked PASS.
 
 One external dependency remains: the Sociobot billing product is not registered. Its checkout endpoint returned HTTP 404 after the final deployment. The page now keeps the visitor on the product and reports that registration is pending. Existing license restore and verification remain available. Exact registration metadata is in `/work/.evidence/billing-offer.json` for the separate billing operator.
 
@@ -12,6 +12,15 @@ One external dependency remains: the Sociobot billing product is not registered.
 - Handoff/report commit: the commit containing this file; it follows the implementation SHA above.
 - Version: `0.2.0`
 - Live/fresh `index.html` SHA-256: `059e0f48480d7298d0d334ed5c20ba623417077399597e10c66613679dcc327d`
+
+## Verification 3
+
+- Verdict: **FAIL** — 1 finding and 1 untested public claim.
+- Verification report: `.factory/verification-3.md`.
+- A fresh clone at documentation SHA `3c11150` passed `npm ci`, `npm test` (32 browser tests plus Rust/Vitest tests), `npm run typecheck`, `npm run build`, and `cargo package -p notes-preflight --allow-dirty`.
+- Every one of the 20 declared claim commands passed independently. The packaged 0.2.0 crate installed in a separate consumer root and its demo reported the expected 3 notebooks, 5 notes, 3 attachments, changed note, and missing audio attachment.
+- Live desktop and phone checks passed for the first screen, demo isolation/reset/exit, normal and recovery scans, offline reload, keyboard/focus, reduced motion, 200% text, route titles, links, legal pages, designed 404, privacy requests, and axe serious/critical issues. `verify-url.sh` passed.
+- Lighthouse was attempted but the supplied Chromium tab crashed during Lighthouse final-screenshot capture, so no independent score is claimed.
 
 ## What changed
 
